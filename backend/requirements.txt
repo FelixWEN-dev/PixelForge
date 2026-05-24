@@ -18,3 +18,8 @@ requests>=2.31.0
 
 # LangChain 工具 (可选，保留兼容)
 langchain>=0.1.0
+
+# 数据库
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+pymysql>=1.1.0

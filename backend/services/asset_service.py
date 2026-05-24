@@ -2,10 +2,9 @@
 素材生成服务 - 基于 LangChain BaseTool
 """
 
-import os
 import uuid
 import json
-from typing import Any, List, Optional, Type
+from typing import Any
 from datetime import datetime
 from pathlib import Path
 
@@ -16,7 +15,11 @@ import dashscope
 from dashscope import ImageSynthesis, MultiModalConversation
 from http import HTTPStatus
 
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from config import settings, IMAGE_DIR
+from models.database_models import SessionLocal, GenerationHistory
 
 
 class AssetGenerationInput(BaseModel):
@@ -33,7 +36,7 @@ class AssetGenerationInput(BaseModel):
         default="1024*1024",
         description="图片尺寸"
     )
-    reference_images: List[str] = Field(
+    reference_images: list[str] = Field(
         default=[],
         description="参考图片URL列表（可选）"
     )
@@ -60,14 +63,14 @@ class AssetGeneratorTool(BaseTool):
     """
     name: str = "generate_2d_asset"
     description: str = "根据描述生成2D游戏素材图片，支持多模态输入（文本+参考图）"
-    args_schema: Type[BaseModel] = AssetGenerationInput
+    args_schema: type[BaseModel] = AssetGenerationInput
 
     # API 配置
     api_key: str = Field(default_factory=lambda: settings.DASHSCOPE_API_KEY)
     t2i_model: str = Field(default=settings.T2I_MODEL)
     i2i_model: str = Field(default=settings.I2I_MODEL)
-    style_keywords: dict = Field(default=settings.STYLE_KEYWORDS)
-    type_keywords: dict = Field(default=settings.TYPE_KEYWORDS)
+    style_keywords: dict[str, str] = Field(default=settings.STYLE_KEYWORDS)
+    type_keywords: dict[str, str] = Field(default=settings.TYPE_KEYWORDS)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -80,7 +83,7 @@ class AssetGeneratorTool(BaseTool):
         type_kw = self.type_keywords.get(asset_type, "2D game asset")
         return f"{description}, {type_kw}, {style_kw}, high quality, game art"
 
-    def _build_messages(self, prompt: str, reference_images: List[str]) -> List[dict[str, Any]]:
+    def _build_messages(self, prompt: str, reference_images: list[str]) -> list[dict[str, Any]]:
         """构建多模态消息格式"""
         content = []
         for img_url in reference_images[:settings.MAX_REFERENCE_IMAGES]:
@@ -88,7 +91,7 @@ class AssetGeneratorTool(BaseTool):
         content.append({"text": prompt})
         return [{"role": "user", "content": content}]
 
-    def _download_image(self, image_url: str, asset_type: str) -> Optional[Path]:
+    def _download_image(self, image_url: str, asset_type: str) -> Path | None:
         """下载图片到本地"""
         try:
             response = requests.get(image_url, timeout=30)
@@ -116,7 +119,7 @@ class AssetGeneratorTool(BaseTool):
         asset_type: str,
         size: str = "1024*1024",
         watermark: bool = False
-    ) -> dict:
+    ) -> dict[str, Any]:
         """文生图：使用 ImageSynthesis API"""
         try:
             response = ImageSynthesis.call(
@@ -134,6 +137,7 @@ class AssetGeneratorTool(BaseTool):
                 results = response.output.results
                 if results:
                     image_url = results[0].url
+                    print(f"✅ API 返回图片: {image_url[:60]}...")
                     local_path = self._download_image(image_url, asset_type)
                     result = {
                         "success": True,
@@ -142,6 +146,7 @@ class AssetGeneratorTool(BaseTool):
                     if local_path:
                         result["local_path"] = str(local_path)
                         result["filename"] = local_path.name
+                        print(f"✅ 图片下载成功: {local_path.name}")
                     return result
                 return {"success": False, "error": "响应中未找到图片"}
             else:
@@ -153,9 +158,9 @@ class AssetGeneratorTool(BaseTool):
         self,
         prompt: str,
         asset_type: str,
-        reference_images: List[str],
+        reference_images: list[str],
         watermark: bool = False
-    ) -> dict:
+    ) -> dict[str, Any]:
         """图生图/编辑：使用 qwen-image-edit-plus"""
         messages = self._build_messages(prompt, reference_images)
         parameters = {
@@ -182,6 +187,7 @@ class AssetGeneratorTool(BaseTool):
                 for content in contents:
                     if 'image' in content:
                         image_url = content['image']
+                        print(f"✅ API 返回图片: {image_url[:60]}...")
                         local_path = self._download_image(image_url, asset_type)
                         result = {
                             "success": True,
@@ -190,6 +196,7 @@ class AssetGeneratorTool(BaseTool):
                         if local_path:
                             result["local_path"] = str(local_path)
                             result["filename"] = local_path.name
+                            print(f"✅ 图片下载成功: {local_path.name}")
                         return result
             return {"success": False, "error": "响应中未找到图片"}
         else:
@@ -201,12 +208,12 @@ class AssetGeneratorTool(BaseTool):
         description: str,
         style: str = "像素风",
         size: str = "1024*1024",
-        reference_images: Optional[List[str]] = None,
+        reference_images: list[str] | None = None,
         n: int = 1,
         negative_prompt: str = "",
         watermark: bool = False
     ) -> str:
-        """LangChain BaseTool 的抽象方法 - 执行素材生成"""
+        """LangChain BaseTool 的抽象方法 - 执行素材生成（带数据库记录）"""
         if not self.api_key:
             return json.dumps({
                 "success": False,
@@ -216,9 +223,34 @@ class AssetGeneratorTool(BaseTool):
         reference_images = reference_images or []
         task_id = self._generate_task_id()
         prompt = self._build_prompt(asset_type, description, style)
+        model = self.i2i_model if reference_images else self.t2i_model
+
+        # 创建数据库会话
+        db = SessionLocal()
 
         try:
+            # 1. 插入记录，状态设为"生成中"
+            history = GenerationHistory(
+                task_id=task_id,
+                asset_type=asset_type,
+                description=description,
+                style=style,
+                size=size,
+                n=n,
+                watermark=1 if watermark else 0,
+                model=model,
+                prompt=prompt,
+                local_paths=[],
+                status="processing"
+            )
+            db.add(history)
+            db.commit()
+            print(f"📝 数据库记录已创建: {task_id}, 状态: processing")
+
+            # 2. 生成图片
             images = []
+            local_paths = []
+
             for i in range(n):
                 if reference_images:
                     result = self._run_image_edit(prompt, asset_type, reference_images, watermark)
@@ -231,12 +263,26 @@ class AssetGeneratorTool(BaseTool):
                         "local_path": result.get("local_path", ""),
                         "filename": result.get("filename", "")
                     })
+                    if result.get("local_path"):
+                        local_paths.append(result["local_path"])
                 else:
+                    # 生成失败，更新状态为 failed
+                    history.status = "failed"  # type: ignore
+                    db.commit()
+                    print(f"❌ 生成失败: {task_id}, 状态: failed")
+                    db.close()
                     return json.dumps({
                         "success": False,
                         "error": result.get("error", "生成失败"),
                         "task_id": task_id
                     }, ensure_ascii=False)
+
+            # 3. 生成成功，更新状态为 completed
+            history.status = "completed"  # type: ignore
+            history.local_paths = local_paths  # type: ignore
+            db.commit()
+            print(f"✅ 生成完成: {task_id}, 状态: completed")
+            db.close()
 
             return json.dumps({
                 "success": True,
@@ -244,11 +290,23 @@ class AssetGeneratorTool(BaseTool):
                     "images": images,
                     "task_id": task_id,
                     "prompt": prompt,
-                    "model": self.i2i_model if reference_images else self.t2i_model
+                    "model": model
                 }
             }, ensure_ascii=False)
 
         except Exception as e:
+            # 异常时更新状态为 failed
+            try:
+                history = db.query(GenerationHistory).filter_by(task_id=task_id).first()
+                if history:
+                    history.status = "failed"  # type: ignore
+                    db.commit()
+                    print(f"❌ 异常失败: {task_id}, 状态: failed, 错误: {e}")
+            except:
+                pass
+            finally:
+                db.close()
+
             return json.dumps({
                 "success": False,
                 "error": str(e),
@@ -269,11 +327,11 @@ class AssetService:
         description: str,
         style: str = "像素风",
         size: str = "1024*1024",
-        reference_images: Optional[List[str]] = None,
+        reference_images: list[str] | None = None,
         n: int = 1,
         negative_prompt: str = "",
         watermark: bool = False
-    ) -> dict:
+    ) -> dict[str, Any]:
         """生成素材"""
         result = self.generator._run(
             asset_type=asset_type,
