@@ -59,19 +59,16 @@ import AppNavbar from "./AppNavbar.vue";
   box-shadow: @shadow-sm;
 }
 
-/* ===== Content（Tailwind + CSS） ===== */
+/* ===== Content ==== */
 .content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-
-  /* Tailwind负责 padding */
   padding: 28px;
-
   background: @bg-base;
 }
 
-/* ===== 滚动条（必须 CSS） ===== */
+/* ===== 滚动条 ===== */
 .content::-webkit-scrollbar {
   width: 8px;
 }
