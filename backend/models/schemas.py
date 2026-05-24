@@ -2,8 +2,6 @@
 Pydantic 数据模型定义
 """
 
-from typing import List, Optional
-from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -27,7 +25,7 @@ class GenerateRequest(BaseModel):
         default="1024*1024",
         description="图片尺寸: 1024*1024/1280*1280/1280*720/1920*1080/720*1280"
     )
-    reference_images: List[str] = Field(
+    reference_images: list[str] = Field(
         default=[],
         description="参考图片URL列表，最多3张"
     )
@@ -48,7 +46,7 @@ class GenerateRequest(BaseModel):
     
     @field_validator('reference_images')
     @classmethod
-    def validate_reference_images(cls, v):
+    def validate_reference_images(cls, v: list[str]) -> list[str]:
         if len(v) > 3:
             raise ValueError('参考图片最多3张')
         return v
@@ -63,7 +61,7 @@ class ImageResult(BaseModel):
 
 class GenerateData(BaseModel):
     """生成成功返回的数据"""
-    images: List[ImageResult] = Field(..., description="生成的图片列表")
+    images: list[ImageResult] = Field(..., description="生成的图片列表")
     task_id: str = Field(..., description="任务ID")
     prompt: str = Field(..., description="实际使用的完整提示词")
     model: str = Field(..., description="使用的AI模型")
@@ -72,8 +70,8 @@ class GenerateData(BaseModel):
 class GenerateResponse(BaseModel):
     """生成素材响应模型"""
     success: bool = Field(..., description="请求是否成功")
-    data: Optional[GenerateData] = Field(None, description="成功时返回的数据")
-    error: Optional[str] = Field(None, description="失败时的错误信息")
+    data: GenerateData | None = Field(None, description="成功时返回的数据")
+    error: str | None = Field(None, description="失败时的错误信息")
 
 
 class TaskStatus(BaseModel):
@@ -81,10 +79,10 @@ class TaskStatus(BaseModel):
     task_id: str = Field(..., description="任务ID")
     status: str = Field(..., description="状态: pending/processing/completed/failed")
     progress: int = Field(..., ge=0, le=100, description="进度百分比 0-100")
-    result: Optional[GenerateData] = Field(None, description="完成时的结果数据")
-    error: Optional[str] = Field(None, description="失败时的错误信息")
+    result: GenerateData | None = Field(None, description="完成时的结果数据")
+    error: str | None = Field(None, description="失败时的错误信息")
     created_at: str = Field(..., description="创建时间")
-    completed_at: Optional[str] = Field(None, description="完成时间")
+    completed_at: str | None = Field(None, description="完成时间")
 
 
 class AssetInfo(BaseModel):
@@ -102,7 +100,7 @@ class AssetListResponse(BaseModel):
     total: int = Field(..., description="总数")
     page: int = Field(..., description="当前页码")
     page_size: int = Field(..., description="每页数量")
-    data: List[AssetInfo] = Field(..., description="素材列表")
+    data: list[AssetInfo] = Field(..., description="素材列表")
 
 
 class DeleteResponse(BaseModel):
