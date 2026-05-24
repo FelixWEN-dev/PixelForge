@@ -11,7 +11,14 @@ from sqlalchemy.orm import sessionmaker
 DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/pixelforge"
 
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+engine = create_engine(
+    DATABASE_URL, 
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+    pool_pre_ping=True,  # 自动检测断开的连接
+    pool_recycle=3600,   # 1小时后回收连接
+    pool_size=10,        # 连接池大小
+    max_overflow=20      # 超出连接池大小时的最大连接数
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -29,7 +36,7 @@ class GenerationHistory(Base):
     size = Column(String(20), default="1024*1024")
     n = Column(Integer, default=1)
     watermark = Column(Integer, default=0)  # 0=false, 1=true
-    model = Column(String(50))
+    model = Column(String(100))
     prompt = Column(Text)
     local_paths = Column(JSON, default=list)  # 本地路径数组
     status = Column(String(20), default="pending")  # pending/processing/completed/failed

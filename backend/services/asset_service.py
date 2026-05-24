@@ -69,8 +69,6 @@ class AssetGeneratorTool(BaseTool):
     api_key: str = Field(default_factory=lambda: settings.DASHSCOPE_API_KEY)
     t2i_model: str = Field(default=settings.T2I_MODEL)
     i2i_model: str = Field(default=settings.I2I_MODEL)
-    style_keywords: dict[str, str] = Field(default=settings.STYLE_KEYWORDS)
-    type_keywords: dict[str, str] = Field(default=settings.TYPE_KEYWORDS)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -79,8 +77,8 @@ class AssetGeneratorTool(BaseTool):
 
     def _build_prompt(self, asset_type: str, description: str, style: str) -> str:
         """构建生成提示词"""
-        style_kw = self.style_keywords.get(style, style)
-        type_kw = self.type_keywords.get(asset_type, "2D game asset")
+        style_kw = settings.STYLE_KEYWORDS.get(style, style)
+        type_kw = settings.TYPE_KEYWORDS.get(asset_type, "2D game asset")
         return f"{description}, {type_kw}, {style_kw}, high quality, game art"
 
     def _build_messages(self, prompt: str, reference_images: list[str]) -> list[dict[str, Any]]:
