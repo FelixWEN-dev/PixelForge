@@ -1,26 +1,33 @@
 import { createRouter, createWebHashHistory } from "vue-router";
+
 import ChatView from "@/views/ChatView.vue";
-import HistoryView from "@/views/HistoryView.vue";
+import ResultView from "@/views/ResultView.vue";
 import AboutView from "@/views/AboutView.vue";
 
 const routes = [
   {
     path: "/",
+    redirect: "/chat",
+  },
+
+  {
+    path: "/chat",
     name: "Chat",
     component: ChatView,
-    meta: { title: "新对话" },
+    meta: { title: "新建生成" },
   },
+
   {
-    path: "/history/:id?",
-    name: "History",
-    component: HistoryView,
-    meta: { title: "历史记录" },
+    path: "/result/:id?",
+    name: "Result",
+    component: ResultView,
+    meta: { title: "生成结果" },
   },
+
   {
     path: "/about",
     name: "About",
     component: AboutView,
-    meta: { title: "关于" },
   },
 ];
 
