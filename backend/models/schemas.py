@@ -85,24 +85,6 @@ class TaskStatus(BaseModel):
     completed_at: str | None = Field(None, description="完成时间")
 
 
-class AssetInfo(BaseModel):
-    """素材信息"""
-    id: str = Field(..., description="素材ID")
-    filename: str = Field(..., description="文件名")
-    asset_type: str = Field(..., description="素材类型")
-    style: str = Field(..., description="风格")
-    url: str = Field(..., description="访问URL")
-    created_at: str = Field(..., description="创建时间")
-
-
-class AssetListResponse(BaseModel):
-    """素材列表响应"""
-    total: int = Field(..., description="总数")
-    page: int = Field(..., description="当前页码")
-    page_size: int = Field(..., description="每页数量")
-    data: list[AssetInfo] = Field(..., description="素材列表")
-
-
 class DeleteResponse(BaseModel):
     """删除响应"""
     success: bool = Field(..., description="是否成功")
@@ -113,3 +95,28 @@ class ErrorResponse(BaseModel):
     """错误响应"""
     success: bool = Field(default=False)
     error: str = Field(..., description="错误信息")
+
+
+class HistoryItem(BaseModel):
+    """历史记录单项"""
+    id: int = Field(..., description="记录ID")
+    task_id: str = Field(..., description="任务ID")
+    asset_type: str = Field(..., description="素材类型")
+    description: str = Field(..., description="描述")
+    style: str = Field(..., description="风格")
+    size: str = Field(..., description="尺寸")
+    n: int = Field(..., description="生成数量")
+    watermark: int = Field(..., description="是否加水印: 0=无, 1=有")
+    model: str | None = Field(None, description="使用的AI模型")
+    prompt: str | None = Field(None, description="完整提示词")
+    local_paths: list[str] = Field(default=[], description="图片本地路径列表")
+    status: str = Field(..., description="状态")
+    created_at: str = Field(..., description="创建时间")
+
+
+class HistoryListResponse(BaseModel):
+    """历史记录列表响应"""
+    success: bool = Field(..., description="请求是否成功")
+    total: int = Field(..., description="总数")
+    data: list[HistoryItem] = Field(..., description="历史记录列表")
+    error: str | None = Field(None, description="错误信息")

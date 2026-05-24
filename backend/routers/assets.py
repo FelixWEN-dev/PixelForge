@@ -4,8 +4,12 @@
 
 from fastapi import APIRouter
 
-from models.schemas import GenerateRequest, GenerateResponse
+from models.schemas import (
+    GenerateRequest, GenerateResponse,
+    HistoryListResponse, HistoryItem
+)
 from services.asset_service import asset_service
+from models.database_models import SessionLocal, GenerationHistory
 
 
 router = APIRouter(prefix="/api/v1", tags=["素材生成"])
@@ -41,3 +45,50 @@ async def generate_asset(request: GenerateRequest):
             success=False,
             error=result.get("error", "生成失败")
         )
+
+
+@router.get("/history", response_model=HistoryListResponse)
+async def get_history():
+    """
+    获取生成历史记录（仅返回已完成的记录）
+    """
+    db = SessionLocal()
+    try:
+        # 查询所有 status 为 completed 的记录
+        records = db.query(GenerationHistory).filter(
+            GenerationHistory.status == "completed"
+        ).order_by(GenerationHistory.created_at.desc()).all()
+
+        # 转换为响应模型
+        history_items = []
+        for record in records:
+            history_items.append(HistoryItem(
+                id=record.id,
+                task_id=record.task_id,
+                asset_type=record.asset_type,
+                description=record.description,
+                style=record.style,
+                size=record.size,
+                n=record.n,
+                watermark=record.watermark,
+                model=record.model,
+                prompt=record.prompt,
+                local_paths=record.local_paths or [],
+                status=record.status,
+                created_at=record.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            ))
+
+        return HistoryListResponse(
+            success=True,
+            total=len(history_items),
+            data=history_items
+        )
+    except Exception as e:
+        return HistoryListResponse(
+            success=False,
+            total=0,
+            data=[],
+            error=str(e)
+        )
+    finally:
+        db.close()

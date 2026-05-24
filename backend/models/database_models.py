@@ -10,8 +10,6 @@ from sqlalchemy.orm import sessionmaker
 # 数据库配置 (MySQL)
 DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/pixelforge"
 
-# SQLite 配置（备用）
-# DATABASE_URL = "sqlite:///./pixelforge.db"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

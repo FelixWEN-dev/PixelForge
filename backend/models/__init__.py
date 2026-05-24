@@ -7,10 +7,10 @@ from .schemas import (
     GenerateResponse,
     ImageResult,
     TaskStatus,
-    AssetInfo,
-    AssetListResponse,
     ErrorResponse,
-    DeleteResponse
+    DeleteResponse,
+    HistoryItem,
+    HistoryListResponse
 )
 
 __all__ = [
@@ -18,8 +18,8 @@ __all__ = [
     "GenerateResponse",
     "ImageResult",
     "TaskStatus",
-    "AssetInfo",
-    "AssetListResponse",
     "ErrorResponse",
-    "DeleteResponse"
+    "DeleteResponse",
+    "HistoryItem",
+    "HistoryListResponse"
 ]
