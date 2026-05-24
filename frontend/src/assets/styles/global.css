@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "LXGW WenKai";
+  src: url("@/assets/fonts/LXGWWenKai-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,15 +17,12 @@ body {
   height: 100%;
 }
 
+:root {
+  --font-main: "LXGW WenKai", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
 body {
-  font-family: "LXGW WenKai", "Source Han Serif SC", "PingFang SC", serif;
-
-  background-color: #1b1f2a;
-  color: #f2efe8;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  line-height: 1.6;
+  font-family: var(--font-main);
 }
 
 /* ===== 常用基础元素 ===== */
