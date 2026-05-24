@@ -1,7 +1,8 @@
 # 2D 游戏素材生成器依赖
 
-# LangChain 工具
-langchain>=0.1.0
+# FastAPI 框架
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
 
 # 数据验证
 pydantic>=2.0.0
@@ -12,5 +13,8 @@ dashscope>=1.13.0
 # 环境变量管理
 python-dotenv>=1.0.0
 
-# HTTP 请求 (备用)
+# HTTP 请求
 requests>=2.31.0
+
+# LangChain 工具 (可选，保留兼容)
+langchain>=0.1.0
