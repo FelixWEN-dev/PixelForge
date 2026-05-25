@@ -1,6 +1,5 @@
 <template>
   <div class="layout">
-
     <!-- Sidebar -->
     <aside class="sidebar">
       <AppSidebar />
@@ -8,7 +7,6 @@
 
     <!-- Main -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-
       <!-- Navbar -->
       <header class="navbar">
         <AppNavbar />
@@ -18,7 +16,6 @@
       <main class="content">
         <router-view />
       </main>
-
     </div>
   </div>
 </template>
@@ -29,7 +26,7 @@ import AppNavbar from "./AppNavbar.vue";
 </script>
 
 <style scoped lang="less">
-@import '@/assets/styles/variables.less';
+@import "@/assets/styles/variables.less";
 
 /* ===== Layout ===== */
 .layout {

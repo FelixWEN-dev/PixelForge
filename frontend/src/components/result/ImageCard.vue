@@ -44,11 +44,11 @@ defineEmits(["click"]);
 
 .image {
   width: 100%;
-  aspect-ratio: 1 / 1;  /* 正方形比例，保持美观 */
-  object-fit: contain;   /* 完整显示图片，不裁剪 */
+  height: auto;
+  object-fit: contain;
   object-position: center;
   display: block;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); /* 深色背景兜底 */
+  background: @bg-card;
 }
 
 /* hover遮罩 */

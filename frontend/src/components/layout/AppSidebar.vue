@@ -253,7 +253,6 @@ function toggleHistory() {
   padding: 20px 0;
 }
 
-/* animation */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.3s ease;

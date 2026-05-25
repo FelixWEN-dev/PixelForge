@@ -51,22 +51,26 @@ const quickPrompts = [
 
 const handleQuickPrompt = async (prompt) => {
   if (!prompt?.trim()) return;
-  await doGenerate(prompt, 1);
+  await doGenerate(prompt, 1, "1024*1024");
 };
 
 const handleSend = async (payload) => {
   if (!payload?.prompt?.trim()) return;
-  await doGenerate(payload.prompt, payload.count || 1);
+  await doGenerate(
+    payload.prompt,
+    payload.count || 1,
+    payload.size || "1024*1024",
+  );
 };
 
-const doGenerate = async (description, n) => {
+const doGenerate = async (description, n, size) => {
   isLoading.value = true;
   try {
     const res = await generateAsset({
       asset_type: "character",
       description,
       style: "像素风",
-      size: "1024*1024",
+      size: size || "1024*1024",
       reference_images: [],
       n,
       watermark: false,

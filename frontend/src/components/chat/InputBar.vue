@@ -109,26 +109,34 @@
 
         <button
           class="option"
-          :class="{ active: size === '1:1' }"
-          @click="size = '1:1'"
+          :class="{ active: size === '1024*1024' }"
+          @click="size = '1024*1024'"
         >
           1:1
         </button>
 
         <button
           class="option"
-          :class="{ active: size === '3:4' }"
-          @click="size = '3:4'"
+          :class="{ active: size === '1280*720' }"
+          @click="size = '1280*720'"
         >
-          3:4
+          16:9
         </button>
 
         <button
           class="option"
-          :class="{ active: size === '16:9' }"
-          @click="size = '16:9'"
+          :class="{ active: size === '1920*1080' }"
+          @click="size = '1920*1080'"
         >
-          16:9
+          高清
+        </button>
+
+        <button
+          class="option"
+          :class="{ active: size === '720*1280' }"
+          @click="size = '720*1280'"
+        >
+          竖屏
         </button>
       </div>
 
@@ -203,7 +211,6 @@ const submit = () => {
     input.value,
     style.value,
     type.value,
-    size.value,
     transparent.value ? "透明背景" : "",
   ]
     .filter(Boolean)
@@ -212,6 +219,7 @@ const submit = () => {
   emit("send", {
     prompt,
     count: count.value || 1,
+    size: size.value || "1024*1024",
   });
 
   input.value = "";
