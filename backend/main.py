@@ -8,12 +8,40 @@ PixelForge - 2D 游戏素材生成 API (FastAPI)
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 
 from config import settings, IMAGE_DIR
 from routers.assets import router as assets_router
+
+
+class CORSStaticFiles(StaticFiles):
+    """带 CORS 头的静态文件处理器"""
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        # 为所有响应添加 CORS 头（包括 404）
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
+    
+    async def __call__(self, scope, receive, send):
+        # 处理 OPTIONS 预检请求
+        if scope["type"] == "http" and scope["method"] == "OPTIONS":
+            response = Response(
+                content="",
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                }
+            )
+            await response(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
 
 
 @asynccontextmanager
@@ -63,8 +91,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 挂载静态文件目录（图片）
-app.mount("/image", StaticFiles(directory=IMAGE_DIR), name="images")
+# 挂载静态文件目录（图片）- 使用自定义 CORSStaticFiles
+app.mount("/image", CORSStaticFiles(directory=IMAGE_DIR), name="images")
 
 # 注册路由
 app.include_router(assets_router)
