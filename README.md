@@ -43,7 +43,7 @@ pip install -r requirements.txt
 # 创建 .env 文件，添加 DASHSCOPE_API_KEY=your_api_key
 
 # 启动服务
-python asset_generator.py
+python main.py
 ```
 
 后端服务默认运行在 `http://localhost:8000`
