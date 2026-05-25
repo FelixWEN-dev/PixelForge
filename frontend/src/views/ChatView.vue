@@ -38,7 +38,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import InputBar from "@/components/chat/InputBar.vue";
 import AppLoading from "@/components/common/AppLoading.vue";
-import { generateAsset } from "@/api/request";
+import { generateAsset, getImageUrl } from "@/api/request";
 
 const router = useRouter();
 const isLoading = ref(false);
@@ -51,12 +51,12 @@ const quickPrompts = [
 
 const handleQuickPrompt = async (prompt) => {
   if (!prompt?.trim()) return;
-  await doGenerate(prompt, 4);
+  await doGenerate(prompt, 1);
 };
 
 const handleSend = async (payload) => {
   if (!payload?.prompt?.trim()) return;
-  await doGenerate(payload.prompt, payload.count || 4);
+  await doGenerate(payload.prompt, payload.count || 1);
 };
 
 const doGenerate = async (description, n) => {
@@ -78,7 +78,7 @@ const doGenerate = async (description, n) => {
 
     const images = res.data.images.map((img, index) => ({
       id: index + 1,
-      url: `http://localhost:8000${img.url}`,
+      url: getImageUrl(img.url),
       status: "done",
     }));
 

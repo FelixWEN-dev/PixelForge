@@ -1,20 +1,6 @@
-import { mockGenerate, mockHistory, mockHealth } from "@/mock/index.js";
-
 // 后端 API 地址
-const API_BASE = "";
-const API_PREFIX = "";
-
-// ========== Mock 开关 ==========
-// 开发阶段设为 true 使用 Mock 数据，联调/生产时改为 false
-let USE_MOCK = true;
-
-export function setUseMock(useMock) {
-  USE_MOCK = useMock;
-}
-
-export function isMockEnabled() {
-  return USE_MOCK;
-}
+const API_BASE = "http://localhost:8000";
+const API_PREFIX = "/api/v1";
 
 // ========== 通用请求封装 ==========
 async function request(url, options = {}) {
@@ -46,9 +32,6 @@ async function request(url, options = {}) {
  * 生成素材
  */
 export function generateAsset(payload) {
-  if (USE_MOCK) {
-    return mockGenerate(payload);
-  }
   return request(`${API_PREFIX}/generate`, {
     method: "POST",
     body: JSON.stringify(payload),
@@ -59,9 +42,6 @@ export function generateAsset(payload) {
  * 获取历史记录
  */
 export function getHistory() {
-  if (USE_MOCK) {
-    return mockHistory();
-  }
   return request(`${API_PREFIX}/history`, {
     method: "GET",
   });
@@ -71,9 +51,6 @@ export function getHistory() {
  * 健康检查
  */
 export function checkHealth() {
-  if (USE_MOCK) {
-    return mockHealth();
-  }
   return request(`/health`, {
     method: "GET",
   });
@@ -85,8 +62,18 @@ export function checkHealth() {
 export function getImageUrl(path) {
   if (!path) return "";
 
-  // 如果已经是完整 URL
-  if (path.startsWith("http")) return path;
+  // 如果已经是完整 URL（支持 http://, https:// 以及格式错误的 https//）
+  if (
+    path.startsWith("http://") ||
+    path.startsWith("https://") ||
+    path.startsWith("https//")
+  ) {
+    // 修复可能的格式错误
+    if (path.startsWith("https//")) {
+      return path.replace("https//", "https://");
+    }
+    return path;
+  }
 
   return `${API_BASE}${path}`;
 }

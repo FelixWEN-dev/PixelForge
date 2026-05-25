@@ -29,26 +29,50 @@
 
         <button
           class="option"
-          :class="{ active: style === 'pixel' }"
-          @click="style = 'pixel'"
+          :class="{ active: style === '像素风' }"
+          @click="style = '像素风'"
         >
           像素风
         </button>
 
         <button
           class="option"
-          :class="{ active: style === 'anime' }"
-          @click="style = 'anime'"
+          :class="{ active: style === '卡通' }"
+          @click="style = '卡通'"
         >
-          二次元
+          卡通
         </button>
 
         <button
           class="option"
-          :class="{ active: style === 'cyber' }"
-          @click="style = 'cyber'"
+          :class="{ active: style === '手绘' }"
+          @click="style = '手绘'"
         >
-          赛博朋克
+          手绘
+        </button>
+
+        <button
+          class="option"
+          :class="{ active: style === '扁平化' }"
+          @click="style = '扁平化'"
+        >
+          扁平化
+        </button>
+
+        <button
+          class="option"
+          :class="{ active: style === '日系' }"
+          @click="style = '日系'"
+        >
+          日系
+        </button>
+
+        <button
+          class="option"
+          :class="{ active: style === '写实' }"
+          @click="style = '写实'"
+        >
+          写实
         </button>
       </div>
 
@@ -170,7 +194,7 @@ const style = ref("");
 const type = ref("");
 const size = ref("");
 const transparent = ref(false);
-const count = ref("");
+const count = ref(1);
 
 const submit = () => {
   if (!input.value.trim()) return;
@@ -187,7 +211,7 @@ const submit = () => {
 
   emit("send", {
     prompt,
-    count: count.value || 4,
+    count: count.value || 1,
   });
 
   input.value = "";

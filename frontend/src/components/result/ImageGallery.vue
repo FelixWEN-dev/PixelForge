@@ -3,7 +3,7 @@
     <ImageCard
       v-for="(item, index) in images"
       :key="item.id ?? index"
-      :src="item.url"
+      :src="getImageUrl(item.url)"
       @click="handleClick(item)"
     />
   </div>
@@ -13,6 +13,8 @@
 import { computed } from "vue";
 import ImageCard from "@/components/result/ImageCard.vue";
 import { defineProps } from "vue";
+import { getImageUrl } from "@/api/request.js";
+
 const props = defineProps({
   images: {
     type: Array,
@@ -63,8 +65,9 @@ const galleryStyle = computed(() => {
 
 // 处理点击图片事件
 const handleClick = (item) => {
-  if (item?.url) {
-    window.open(item.url, "_blank");
+  const url = getImageUrl(item?.url);
+  if (url) {
+    window.open(url, "_blank");
   }
 };
 </script>
