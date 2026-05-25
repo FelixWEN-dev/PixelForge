@@ -40,7 +40,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 
 # 配置环境变量
-# 创建 .env 文件，添加 DASHSCOPE_API_KEY=your_api_key
+# 修改 .env 文件，将YOU_API_KEY修改为真正的阿里百炼平台api
 
 # 启动服务
 python main.py
