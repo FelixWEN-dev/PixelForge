@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, onUnmounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import AppLoading from "@/components/common/AppLoading.vue";
 import { getHistory, extractImageUrl } from "@/api/request";
@@ -157,9 +157,20 @@ const loadHistory = async () => {
   }
 };
 
+// 监听历史记录刷新事件
+const handleRefreshHistory = () => {
+  loadHistory();
+};
+
 // 挂载时加载
 onMounted(() => {
   loadHistory();
+  window.addEventListener("refresh-history", handleRefreshHistory);
+});
+
+// 卸载时移除监听
+onUnmounted(() => {
+  window.removeEventListener("refresh-history", handleRefreshHistory);
 });
 
 // 新对话点击

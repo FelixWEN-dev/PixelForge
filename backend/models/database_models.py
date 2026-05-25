@@ -3,9 +3,9 @@ SQLAlchemy 数据库模型
 """
 
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, JSON
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, JSON, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 
 # 数据库配置 (MySQL)
 DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/pixelforge"
@@ -24,11 +24,26 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+class User(Base):
+    """用户表"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    password = Column(String(100), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # 关联历史记录
+    histories = relationship("GenerationHistory", back_populates="user", cascade="all, delete-orphan")
+
+
 class GenerationHistory(Base):
     """生成历史记录表"""
     __tablename__ = "generation_history"
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True, comment="用户ID")
     task_id = Column(String(50), unique=True, nullable=False, index=True)
     asset_type = Column(String(20), nullable=False)
     description = Column(Text, nullable=False)
@@ -41,6 +56,9 @@ class GenerationHistory(Base):
     local_paths = Column(JSON, default=list)  # 本地路径数组
     status = Column(String(20), default="pending")  # pending/processing/completed/failed
     created_at = Column(DateTime, default=datetime.now)
+
+    # 关联用户
+    user = relationship("User", back_populates="histories")
 
 
 def create_tables():

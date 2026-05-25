@@ -209,7 +209,8 @@ class AssetGeneratorTool(BaseTool):
         reference_images: list[str] | None = None,
         n: int = 1,
         negative_prompt: str = "",
-        watermark: bool = False
+        watermark: bool = False,
+        user_id: int = None
     ) -> str:
         """LangChain BaseTool 的抽象方法 - 执行素材生成（带数据库记录）"""
         if not self.api_key:
@@ -229,6 +230,7 @@ class AssetGeneratorTool(BaseTool):
         try:
             # 1. 插入记录，状态设为"生成中"
             history = GenerationHistory(
+                user_id=user_id,
                 task_id=task_id,
                 asset_type=asset_type,
                 description=description,
@@ -243,7 +245,7 @@ class AssetGeneratorTool(BaseTool):
             )
             db.add(history)
             db.commit()
-            print(f"📝 数据库记录已创建: {task_id}, 状态: processing")
+            print(f"📝 数据库记录已创建: {task_id}, user_id: {user_id}, 状态: processing")
 
             # 2. 生成图片
             images = []
@@ -328,7 +330,8 @@ class AssetService:
         reference_images: list[str] | None = None,
         n: int = 1,
         negative_prompt: str = "",
-        watermark: bool = False
+        watermark: bool = False,
+        user_id: int = None
     ) -> dict[str, Any]:
         """生成素材"""
         result = self.generator._run(
@@ -339,7 +342,8 @@ class AssetService:
             reference_images=reference_images,
             n=n,
             negative_prompt=negative_prompt,
-            watermark=watermark
+            watermark=watermark,
+            user_id=user_id
         )
         return json.loads(result)
 

@@ -88,6 +88,9 @@ const doGenerate = async (description, n, size) => {
 
     const prompt = res.data.prompt;
 
+    // 触发历史记录刷新事件
+    window.dispatchEvent(new CustomEvent("refresh-history"));
+
     router.push({
       path: "/result",
       state: {

@@ -15,6 +15,7 @@ from starlette.responses import Response
 
 from config import settings, IMAGE_DIR
 from routers.assets import router as assets_router
+from routers.auth import router as auth_router
 
 
 class CORSStaticFiles(StaticFiles):
@@ -96,6 +97,7 @@ app.mount("/image", CORSStaticFiles(directory=IMAGE_DIR), name="images")
 
 # 注册路由
 app.include_router(assets_router)
+app.include_router(auth_router)
 
 
 @app.get("/")

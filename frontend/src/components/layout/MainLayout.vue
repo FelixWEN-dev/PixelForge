@@ -1,7 +1,7 @@
 <template>
   <div class="layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
+    <!-- Sidebar - 仅登录后显示 -->
+    <aside v-if="isLoggedIn" class="sidebar">
       <AppSidebar />
     </aside>
 
@@ -21,8 +21,32 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 import AppSidebar from "./AppSidebar.vue";
 import AppNavbar from "./AppNavbar.vue";
+
+const router = useRouter();
+const isLoggedIn = ref(false);
+
+// 检查登录状态
+const checkLoginStatus = () => {
+  isLoggedIn.value = !!localStorage.getItem("token");
+};
+
+onMounted(() => {
+  checkLoginStatus();
+  window.addEventListener("user-login", checkLoginStatus);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("user-login", checkLoginStatus);
+});
+
+// 监听路由变化，更新登录状态
+router.afterEach(() => {
+  checkLoginStatus();
+});
 </script>
 
 <style scoped lang="less">

@@ -2,14 +2,39 @@
 const API_BASE = "http://localhost:8000";
 const API_PREFIX = "/api/v1";
 
-// ========== 通用请求封装 ==========
-async function request(url, options = {}) {
+// ========== 获取当前用户ID ==========
+function getCurrentUserId() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  
   try {
+    // token 格式: user_{user_id}_{username}
+    const parts = token.split("_");
+    if (parts.length >= 2) {
+      return parts[1];
+    }
+  } catch (e) {
+    console.error("[API] 解析 token 失败", e);
+  }
+  return null;
+}
+
+// ========== 通用请求封装 ==========
+export async function request(url, options = {}) {
+  try {
+    const userId = getCurrentUserId();
+    const headers = {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    };
+    
+    // 添加用户ID到请求头
+    if (userId) {
+      headers["X-User-Id"] = userId;
+    }
+    
     const response = await fetch(`${API_BASE}${url}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-      },
+      headers,
       ...options,
     });
 

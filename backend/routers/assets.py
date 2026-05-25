@@ -2,7 +2,7 @@
 素材生成 API 路由
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header, HTTPException
 
 from models.schemas import (
     GenerateRequest, GenerateResponse,
@@ -15,8 +15,29 @@ from models.database_models import SessionLocal, GenerationHistory
 router = APIRouter(prefix="/api/v1", tags=["素材生成"])
 
 
+# ========== 辅助函数 ==========
+
+def get_current_user_id(authorization: str = Header(None)) -> int:
+    """从 Authorization header 解析用户ID"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="未登录")
+    
+    token = authorization.replace("Bearer ", "")
+    try:
+        parts = token.split("_")
+        if len(parts) >= 2:
+            return int(parts[1])
+    except:
+        pass
+    
+    raise HTTPException(status_code=401, detail="登录已过期")
+
+
 @router.post("/generate", response_model=GenerateResponse)
-async def generate_asset(request: GenerateRequest):
+async def generate_asset(
+    request: GenerateRequest,
+    user_id: int = Header(..., alias="X-User-Id")
+):
     """
     生成2D游戏素材
 
@@ -32,7 +53,8 @@ async def generate_asset(request: GenerateRequest):
         reference_images=request.reference_images,
         n=request.n,
         negative_prompt=request.negative_prompt,
-        watermark=request.watermark
+        watermark=request.watermark,
+        user_id=user_id
     )
 
     if result.get("success"):
@@ -48,14 +70,15 @@ async def generate_asset(request: GenerateRequest):
 
 
 @router.get("/history", response_model=HistoryListResponse)
-async def get_history():
+async def get_history(user_id: int = Header(..., alias="X-User-Id")):
     """
-    获取生成历史记录（仅返回已完成的记录）
+    获取当前用户的生成历史记录（仅返回已完成的记录）
     """
     db = SessionLocal()
     try:
-        # 查询所有 status 为 completed 的记录
+        # 查询当前用户 status 为 completed 的记录
         records = db.query(GenerationHistory).filter(
+            GenerationHistory.user_id == user_id,
             GenerationHistory.status == "completed"
         ).order_by(GenerationHistory.created_at.desc()).all()
 
